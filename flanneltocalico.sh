@@ -3,6 +3,8 @@
 # Remove flannel components such as Daemonsets, deployments, and services using the official manifest
 # This needs to run first on the master node
 echo "modifying cluster manifest to be CNI neutral"
+export KOPS_CLUSTER_NAME=primary.cnimigration.com
+export KOPS_STATE_STORE=s3://primary.cnimigration.com
 
 kops replace -f ~/CNIyamls/nocni.yaml 
 kops update cluster --name primary.cnimigration.com --yes
@@ -15,8 +17,8 @@ kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.tx
 
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i " sudo rm -rf /etc/cni/net.d/*"; done 
 
-for i in node.txt; do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$line "sudo rm -rf /etc/cni/net.d/*"; done
-for i in node.txt; do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$line "ip link delete flannel.1"; done
+for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo rm -rf /etc/cni/net.d/*"; done
+for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "ip link delete flannel.1"; done
 #rolling update the cluster once flannel is removed
 kops rolling-update cluster --cloudonly --force --master-interval=1s --node-interval=1s --yes
 sleep 20m
