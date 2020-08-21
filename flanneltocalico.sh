@@ -10,8 +10,10 @@ kops replace -f ~/CNIyamls/nocni.yaml
 kops update cluster --name primary.cnimigration.com --yes
 # Remove flannel components such as Daemonsets, deployments, and services using the official manifest
 # This needs to run first on the master node
+#the truncate command will empty the known_hosts file, an already existing host file will conflict with a changed host ip address
 truncate -s 0 ~/.ssh/known_hosts
-ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl delete -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
+echo "Deleting flannel Daemonsets, and residue"
+ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl delete $(kubectl get all -n kube-system | grep flannel | tail -n 1 | awk -F ' ' '{print $1}') -n kube-system"
 truncate -s 0 ~/.ssh/known_hosts
 kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.txt 
 
@@ -29,8 +31,10 @@ echo "Starting the installation of Calico CNI plugin"
 #the critical calico system nodes will not start if the cluster CIDR is not initialized
 #100.96.0.0/11 is the cluster CIDR
 #copy modified yaml to the home directory on master node
-scp CNIyamls/calico_modified.yaml ubuntu@api.primary.cnimigration.com:/home/ubuntu/calico.yaml
+truncate -s 0 ~/.ssh/known_hosts
+scp  -o StrictHostKeyChecking=no CNIyamls/calico_modified.yaml ubuntu@api.primary.cnimigration.com:/home/ubuntu/calico.yaml
 #apply modified manifest file
+truncate -s 0 ~/.ssh/known_hosts
 ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl apply -f calico.yaml"
 sleep 2m
 kops validate cluster
