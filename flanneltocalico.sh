@@ -1,14 +1,13 @@
 # the following script will remove the flannel CNI plugin and its residue components
 
-# Remove flannel components such as Daemonsets, deployments, and services using the official manifest
-# This needs to run first on the master node
+
 echo "modifying cluster manifest to be CNI neutral"
 export KOPS_CLUSTER_NAME=primary.cnimigration.com
 export KOPS_STATE_STORE=s3://primary.cnimigration.com
 
 kops replace -f  CNIyamls/nocni.yaml 
 kops update cluster --name primary.cnimigration.com --yes
-# Remove flannel components such as Daemonsets, deployments, and services using the official manifest
+# Remove flannel components such as Daemonsets, deployments, and services 
 # This needs to run first on the master node
 #the truncate command will empty the known_hosts file, an already existing host file will conflict with a changed host ip address
 truncate -s 0 ~/.ssh/known_hosts
@@ -18,7 +17,6 @@ truncate -s 0 ~/.ssh/known_hosts
 kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.txt 
 # the following tasks require sudo permissions on the host machine
 # Loop through the master and worker nodes and delete flannel residue
-for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i " sudo rm -rf /etc/cni/net.d/*"; done 
 
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo rm -rf /etc/cni/net.d/*"; done
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo ip link delete flannel.1"; done
