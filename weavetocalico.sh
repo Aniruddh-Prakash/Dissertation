@@ -1,33 +1,28 @@
-
+#This script will remove Weave and install Flannel
 #!/bin/bash 
 # By: Aniruddh Prakash
 # Date: 21/08/2020
-# Function:  Remove Flannel CNI and install Calico
-#Script: flanneltocalico
-echo "the following script will remove the flannel CNI plugin and its residue components"
-
-echo "Setting Environment Variables to the primary cluster"
+# Function:  Remove Weave and Install Calico
+#Script: calicotoweave
+echo "modifying cluster manifest to be CNI neutral"
 export KOPS_CLUSTER_NAME=primary.cnimigration.com
 export KOPS_STATE_STORE=s3://primary.cnimigration.com
-echo "modifying cluster manifest to be CNI neutral"
+
 kops replace -f  CNIyamls/nocni.yaml 
 kops update cluster --name primary.cnimigration.com --yes
-echo "Changed the cluster manifest to CNI neutral"
-# Remove flannel components such as Daemonsets, deployments, and services 
 # This needs to run first on the master node
 #the truncate command will empty the known_hosts file, an already existing host file will conflict with a changed host ip address
 truncate -s 0 ~/.ssh/known_hosts
-echo "Deleting flannel Daemonsets, and residue"
-kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.txt 
-ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl delete $(kubectl get all -n kube-system | grep flannel | tail -n 1 | awk -F ' ' '{print $1}') -n kube-system"
+echo "Deleting Weave CNI and its components"
+kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.txt
 truncate -s 0 ~/.ssh/known_hosts
-echo " removed flannel pods and daemonsets"
-# the following tasks require sudo permissions on the host machine
-# Loop through the master and worker nodes and delete flannel residue
 
-for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo rm -rf /etc/cni/net.d/*"; done
-for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo ip link delete flannel.1"; done
-#rolling update the cluster once flannel is removed
+ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl delete -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')""
+
+for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "ip link show | grep -E 'weave|veth|vxlan' | awk -F " " '{print $2}'| awk -F ":" '{print $1}'| while read line; do sudo ip link delete $line; done"; done
+
+
+#rolling update the cluster once weave is removed
 kops rolling-update cluster --cloudonly --force --master-interval=1s --node-interval=1s --yes
 sleep 20m
 echo "Starting the installation of Calico CNI plugin"
@@ -44,6 +39,3 @@ truncate -s 0 ~/.ssh/known_hosts
 ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl apply -f calico.yaml"
 sleep 2m
 kops validate cluster
-
-
-

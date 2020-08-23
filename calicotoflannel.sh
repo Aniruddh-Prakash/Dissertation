@@ -1,10 +1,10 @@
-
+#This script will remove calico CNI and install weave
 #!/bin/bash 
 # By: Aniruddh Prakash
 # Date: 21/08/2020
-# Function:  Remove Calico and Install Weave
-#Script: calicotoweave
-echo "This script will remove calico CNI and install weave"
+# Function:  Remove Calico and Install Flannel
+#Script: calicotoflannel
+
 echo "modifying cluster manifest to be CNI neutral"
 export KOPS_CLUSTER_NAME=primary.cnimigration.com
 export KOPS_STATE_STORE=s3://primary.cnimigration.com
@@ -29,11 +29,13 @@ for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ub
 #removing the tunl0@NONE interface from the kernel
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo modprobe -r ipip"; done 
 #forcing a rolling update on the master and nodes
+
+#forcing a rolling update on the master and nodes
 kops rolling-update cluster --cloudonly --force --master-interval=1s --node-interval=1s --yes
 sleep 20m
-echo "Starting the installation of Weave CNI plugin"
+echo "Starting the installation of Flannel CNI plugin"
 truncate -s 0 ~/.ssh/known_hosts
 
-ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')""
+ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl apply -f "https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml""
 sleep 2m
 kops validate cluster
