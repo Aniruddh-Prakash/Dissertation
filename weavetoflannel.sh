@@ -19,15 +19,17 @@ kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.tx
 truncate -s 0 ~/.ssh/known_hosts
 
 ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl delete -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')""
-
+echo " Removing Weave CNI and its components at $(date + "%T")"
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "ip link show | grep -E 'weave|veth|vxlan' | awk -F " " '{print $2}'| awk -F ":" '{print $1}'| while read line; do sudo ip link delete $line; done"; done
 
 #forcing a rolling update on the master and nodes
+echo " Starting a Rolling update on the cluster at $(date + "%T")"
 kops rolling-update cluster --cloudonly --force --master-interval=1s --node-interval=1s --yes
 sleep 20m
-echo "Starting the installation of Flannel CNI plugin"
+echo "Starting the installation of Flannel CNI plugin at $(date + "%T")"
 truncate -s 0 ~/.ssh/known_hosts
 
 ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl apply -f "https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml""
+echo "Completed the installation of the Flannel CNI plugin at $(date + "%T")"
 sleep 2m
 kops validate cluster

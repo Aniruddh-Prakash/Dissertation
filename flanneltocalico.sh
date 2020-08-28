@@ -1,4 +1,3 @@
-
 #!/bin/bash 
 # By: Aniruddh Prakash
 # Date: 21/08/2020
@@ -24,7 +23,7 @@ truncate -s 0 ~/.ssh/known_hosts
 echo " removed flannel pods and daemonsets"
 # the following tasks require sudo permissions on the host machine
 # Loop through the master and worker nodes and delete flannel residue
-
+echo "Removing flannel residue interfaces and links"
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo rm -rf /etc/cni/net.d/*"; done
 for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo ip link delete flannel.1"; done
 #rolling update the cluster once flannel is removed
@@ -41,9 +40,10 @@ truncate -s 0 ~/.ssh/known_hosts
 scp  -o StrictHostKeyChecking=no CNIyamls/calico_modified.yaml ubuntu@api.primary.cnimigration.com:/home/ubuntu/calico.yaml
 #apply modified manifest file
 truncate -s 0 ~/.ssh/known_hosts
+echo "Applying official Calico Manifest"
 ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl apply -f calico.yaml"
 sleep 2m
+echo " Calico CNI Plugin Installed successfully"
 kops validate cluster
-
 
 

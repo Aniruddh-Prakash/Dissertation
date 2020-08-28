@@ -1,0 +1,59 @@
+# Please edit the object below. Lines beginning with a '#' will be ignored,
+# and an empty file will abort the edit. If an error occurs while saving this file will be
+# reopened with the relevant failures.
+#
+apiVersion: kops.k8s.io/v1alpha2
+kind: Cluster
+metadata:
+  creationTimestamp: "2020-08-20T02:34:41Z"
+  name: primary.cnimigration.com
+spec:
+  api:
+    dns: {}
+  authorization:
+    rbac: {}
+  channel: stable
+  cloudProvider: aws
+  configBase: s3://primary.cnimigration.com/primary.cnimigration.com
+  containerRuntime: docker
+  etcdClusters:
+  - cpuRequest: 200m
+    etcdMembers:
+    - instanceGroup: master-eu-west-1a
+      name: a
+    memoryRequest: 100Mi
+    name: main
+  - cpuRequest: 100m
+    etcdMembers:
+    - instanceGroup: master-eu-west-1a
+      name: a
+    memoryRequest: 100Mi
+    name: events
+  iam:
+    allowContainerRegistry: true
+    legacy: false
+  kubelet:
+    anonymousAuth: false
+  kubernetesApiAccess:
+  - 0.0.0.0/0
+  kubernetesVersion: 1.18.6
+  masterInternalName: api.internal.primary.cnimigration.com
+  masterPublicName: api.primary.cnimigration.com
+  networkCIDR: 172.31.0.0/16
+  networkID: vpc-5c9c5825
+  networking:
+    cni: {}
+  nonMasqueradeCIDR: 100.64.0.0/10
+  sshAccess:
+  - 0.0.0.0/0
+  subnets:
+  - cidr: 172.31.32.0/20
+    id: subnet-f25221a8
+    name: eu-west-1a
+    type: Public
+    zone: eu-west-1a
+  topology:
+    dns:
+      type: Private
+    masters: public
+    nodes: public

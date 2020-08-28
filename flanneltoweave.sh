@@ -3,7 +3,9 @@
 # By: Aniruddh Prakash
 # Date: 21/08/2020
 # Function:  Remove FLannel and Install Weave
-#Script: calicotoweave
+#Script: flanneltoweave
+echo "the following script will remove the flannel CNI plugin and install weave"
+
 echo "Setting Environment Variables to the primary cluster"
 export KOPS_CLUSTER_NAME=primary.cnimigration.com
 export KOPS_STATE_STORE=s3://primary.cnimigration.com
@@ -20,7 +22,12 @@ kops validate cluster | tail -n 6| head -n 4| awk -F " " '{print $1}' > nodes.tx
 ssh -i  ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@api.primary.cnimigration.com "kubectl delete $(kubectl get all -n kube-system | grep flannel | tail -n 1 | awk -F ' ' '{print $1}') -n kube-system"
 truncate -s 0 ~/.ssh/known_hosts
 echo " removed flannel pods and daemonsets"
-
+# the following tasks require sudo permissions on the host machine
+# Loop through the master and worker nodes and delete flannel residue
+echo "Removing flannel residue interfaces and links"
+for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo rm -rf /etc/cni/net.d/*"; done
+for i in $(cat nodes.txt); do ssh -i ~/.ssh/id_rsa -oStrictHostKeyChecking=no ubuntu@$i "sudo ip link delete flannel.1"; done
+#rolling update the cluster once flannel is removed
 #forcing a rolling update on the master and nodes
 kops rolling-update cluster --cloudonly --force --master-interval=1s --node-interval=1s --yes
 sleep 20m
