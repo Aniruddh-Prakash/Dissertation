@@ -1,3 +1,8 @@
+ # the following sets up the Kube2iam pods and K8s-velero-backup role on the backup cluster
+#!/bin/bash 
+# By: Aniruddh Prakash
+# Date: 21/08/2020
+#Script: velerorolebackup.sh
 
 cat > values-kube2iam.yaml <<EOF
 extraArgs:

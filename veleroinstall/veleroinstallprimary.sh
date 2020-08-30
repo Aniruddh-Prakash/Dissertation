@@ -1,3 +1,9 @@
+ # the following script handles the intialization of velero pods using Helm Charts on the primary cluster and then initiates the backup
+#!/bin/bash 
+# By: Aniruddh Prakash
+# Date: 21/08/2020
+#Script: veleroinstallprimary.sh
+ 
  cat > velero-values.yaml <<EOF
 podAnnotations:
   iam.amazonaws.com/role: k8s-velero
@@ -24,6 +30,7 @@ initContainers:
 EOF
 
 helm repo add vmware-tanzu https://vmware-tanzu.github.io/helm-charts
+kubectl 
 
 helm install wordpressbackup \
   --namespace velero \

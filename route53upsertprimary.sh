@@ -1,4 +1,8 @@
-#route 53
+ # the following script points the Route 53 Alias record to the primary Elastic Load Balancer
+#!/bin/bash 
+# By: Aniruddh Prakash
+# Date: 21/08/2020
+#Script: route53upsertprimary.sh
 lb1=$(aws elb describe-load-balancers --region eu-west-1| grep DNSName | cut -d '"' -f 4| head -n 1)
 cat > route53upsertprimary.json <<EOF
 {

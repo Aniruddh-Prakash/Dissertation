@@ -1,3 +1,13 @@
+# the following script handles the intialization of velero pods using Helm Charts on the backup cluster and then restores the backup
+#!/bin/bash 
+# By: Aniruddh Prakash
+# Date: 21/08/2020
+#Script: veleroinstallbackup.sh
+
+
+
+
+
  cat > velero-values.yaml <<EOF
 podAnnotations:
   iam.amazonaws.com/role: k8s-velero-backup

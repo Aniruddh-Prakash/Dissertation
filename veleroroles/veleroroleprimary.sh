@@ -1,5 +1,9 @@
-#Installing Kube2iam, a tool that enables pod access to IAM credentials
-# initializing the kube2iam pod which is a 
+ # the following sets up the Kube2iam pods and K8s-velero role on the primary cluster
+#!/bin/bash 
+# By: Aniruddh Prakash
+# Date: 21/08/2020
+#Script: veleroroleprimary.sh
+
 cat > values-kube2iam.yaml <<EOF
 extraArgs:
   base-role-arn: arn:aws:iam::671560363271:role/
