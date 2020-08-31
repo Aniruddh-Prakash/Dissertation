@@ -1,3 +1,4 @@
+#Obtained form Tigera https://github.com/projectcalico/calico/blob/master/hack/remove-calico-policy/iptables-remover-ds.yaml
 sudo iptables -P FORWARD ACCEPT
 sudo sysctl -w net.ipv4.ip_forward=1
 	

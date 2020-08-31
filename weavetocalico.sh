@@ -1,9 +1,9 @@
-#This script will remove Weave and install Flannel
+#This script will remove Weave and install Calico
 #!/bin/bash 
 # By: Aniruddh Prakash
 # Date: 21/08/2020
 # Function:  Remove Weave and Install Calico
-#Script: calicotoweave
+#Script: weavetocalico
 echo "modifying cluster manifest to be CNI neutral"
 export KOPS_CLUSTER_NAME=primary.cnimigration.com
 export KOPS_STATE_STORE=s3://primary.cnimigration.com
